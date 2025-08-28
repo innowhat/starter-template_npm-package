@@ -1,3 +1,3 @@
 export interface AddType {
-  (a: number, b: number): number;
+    (a: number, b: number): number;
 }

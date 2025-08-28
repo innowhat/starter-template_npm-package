@@ -1,20 +1,19 @@
 {
     "compilerOptions": {
-      "lib": ["ES2021"],
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "declarationMap": true,
-      "target": "es2018",
-      "module": "esnext",
-      "declaration": true,
-      "declarationDir": "./dist",
-      "outDir": "./dist",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true
+        "lib": ["ES2021"],
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "declarationMap": true,
+        "target": "es2018",
+        "module": "esnext",
+        "declaration": true,
+        "declarationDir": "./dist",
+        "outDir": "./dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
     },
     "include": ["src"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]
-  }
-  
+}
