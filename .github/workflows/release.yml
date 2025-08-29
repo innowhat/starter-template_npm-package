@@ -20,7 +20,7 @@ jobs:
                      --generate-notes
     publish-npm:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        name: 'Publish the new version to npm registry'
+        name: 'Publish the new version to the npmjs'
         runs-on: ubuntu-22.04
         needs: release
         steps:
@@ -36,8 +36,6 @@ jobs:
             - name: Run NPM Install
               run: npm ci && npm run build
             - name: Publish
-              run: |
-                  cd dist
-                  npm publish --access public
+              run: npm publish --access public
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
