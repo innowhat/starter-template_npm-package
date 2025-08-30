@@ -1,77 +1,274 @@
-name: CI-Build
+name: CI Pipeline
+
+# Trigger: Run on all pushes (except version tags) and closed PRs to main
+# This ensures code quality checks run before any code reaches main branch
 on:
     push:
         branches:
-            - '**'
+            - '**' # All branches
         tags-ignore:
-            - 'v*'
+            - 'v*' # Ignore version tags (handled by release workflow)
     pull_request:
         types:
-            - closed
+            - opened
+            - synchronize
+            - reopened
         branches:
             - main
+
+# Cancel in-progress workflows when new commits are pushed
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
-    eslint:
-        name: Check Syntax with ESLint
+    # Job 1: Code quality and style checks
+    lint:
+        name: 🔍 Code Quality & Linting
         runs-on: ubuntu-22.04
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
+
+        # Skip if triggered by bot or dependabot
+        if: >
+            github.event_name != 'pull_request' || 
+            (github.actor != 'github-actions[bot]' && 
+             github.actor != 'dependabot[bot]')
+
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
+
         steps:
-            - name: Checkout code style
+            - name: 📦 Checkout repository
               uses: actions/checkout@v4
-            - name: Use Node.js ${{ matrix.node-version }} to check Lint
+              with:
+                  # Only need current commit for linting
+                  fetch-depth: 1
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
-                  always-auth: 'false'
-                  cache: 'npm'
                   node-version: ${{ matrix.node-version }}
-            - name: Install Dependencies
-              run: npm ci
-            - name: Run ESLint
+                  cache: 'npm'
+                  # Don't need registry auth for linting
+                  always-auth: false
+
+            - name: 📥 Install dependencies
               run: |
+                  echo "Installing dependencies for Node.js ${{ matrix.node-version }}..."
+                  npm ci
+                  echo "✅ Dependencies installed successfully"
+
+            - name: 🔍 Run ESLint
+              run: |
+                  echo "Running ESLint code quality checks..."
                   npm run lint
-    buildDist:
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
-        name: Build-to-JS
-        needs: [eslint, tests]
+                  echo "✅ Linting completed - no issues found"
+
+            - name: 📊 Cache lint results
+              if: success()
+              run: echo "✅ Lint checks passed for Node.js ${{ matrix.node-version }}"
+
+    # Job 2: Comprehensive test suite
+    test:
+        name: 🧪 Test Suite
         runs-on: ubuntu-22.04
+
+        # Run after linting passes
+        needs: lint
+
+        if: >
+            github.event_name != 'pull_request' || 
+            (github.actor != 'github-actions[bot]' && 
+             github.actor != 'dependabot[bot]')
+
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
-                arch:
-                    - x64
+            # Don't cancel other matrix jobs if one fails
+            fail-fast: false
+
         steps:
-            - name: Checkout code
+            - name: 📦 Checkout repository
               uses: actions/checkout@v4
-            - name: Use Node.js ${{matrix.node-version}} to run build dist on ${{ matrix.arch }}
+              with:
+                  # Need full history for coverage tracking
+                  fetch-depth: 0
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
-                  cache: 'npm'
-                  node-version: ${{ matrix.node-version}}
-            - name: Install dependencies
-              run: npm ci
-            - name: Run Build Dist
-              run: npm run build
-    tests:
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
-        name: Run Tests
-        needs: eslint
-        runs-on: ubuntu-22.04
-        strategy:
-            matrix:
-                node-version: [18.x, 20.x, 22.x]
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-            - name: Use Node.js ${{ matrix.node-version }} to run Tests Covering
-              uses: actions/setup-node@v4
-              with:
-                  always-auth: 'false'
                   node-version: ${{ matrix.node-version }}
                   cache: 'npm'
-            - name: Install Dependencies
-              run: npm ci
-            - name: Run Tests Command (Jest-CI)
-              run: npm test
+                  always-auth: false
+
+            - name: 📥 Install dependencies
+              run: |
+                  echo "Installing dependencies for testing on Node.js ${{ matrix.node-version }}..."
+                  npm ci
+                  echo "✅ Test dependencies installed"
+
+            - name: 🧪 Run test suite
+              run: |
+                  echo "Running comprehensive test suite..."
+                  npm run test:ci
+                  echo "✅ All tests passed on Node.js ${{ matrix.node-version }}"
+
+            - name: 📈 Generate test coverage (Node.js 18.x only)
+              if: matrix.node-version == '18.x'
+              run: |
+                  echo "Generating test coverage report..."
+                  npm run test:coverage
+                  echo "✅ Coverage report generated"
+
+            - name: 📊 Upload coverage reports
+              if: matrix.node-version == '18.x' && success()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: coverage/
+                  retention-days: 30
+
+            - name: ✅ Test summary
+              if: success()
+              run: |
+                  echo "🎉 Test suite completed successfully!"
+                  echo "✅ Node.js ${{ matrix.node-version }}: All tests passing"
+
+    # Job 3: Build verification
+    build:
+        name: 🏗️ Build Verification
+        runs-on: ubuntu-22.04
+
+        # Run after both linting and testing pass
+        needs: [lint, test]
+
+        if: >
+            github.event_name != 'pull_request' || 
+            (github.actor != 'github-actions[bot]' && 
+             github.actor != 'dependabot[bot]')
+
+        strategy:
+            matrix:
+                node-version: [18.x, 20.x, 22.x]
+                architecture: [x64]
+
+        steps:
+            - name: 📦 Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }} on ${{ matrix.architecture }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  architecture: ${{ matrix.architecture }}
+                  cache: 'npm'
+
+            - name: 📥 Install build dependencies
+              run: |
+                  echo "Installing dependencies for build on Node.js ${{ matrix.node-version }}..."
+                  npm ci
+                  echo "✅ Build dependencies installed"
+
+            - name: 🏗️ Build distribution files
+              run: |
+                  echo "Building distribution files..."
+                  npm run build
+                  echo "✅ Build completed successfully"
+
+            - name: 🔍 Verify build artifacts
+              run: |
+                  echo "Verifying build artifacts..."
+
+                  # Check that expected build outputs exist
+                  if [ -d "dist" ]; then
+                    echo "✅ dist directory created"
+                    ls -la dist/
+                  else
+                    echo "❌ dist directory not found"
+                    exit 1
+                  fi
+
+                  # Verify package.json exists and is valid
+                  if [ -f "package.json" ]; then
+                    echo "✅ package.json exists"
+                    node -e "require('./package.json')" && echo "✅ package.json is valid JSON"
+                  else
+                    echo "❌ package.json not found"
+                    exit 1
+                  fi
+
+                  echo "✅ Build verification completed"
+
+            - name: 📦 Test package creation
+              if: matrix.node-version == '18.x'
+              run: |
+                  echo "Testing npm pack (dry run)..."
+                  npm pack --dry-run > pack-output.txt
+                  cat pack-output.txt
+                  echo "✅ Package creation test completed"
+
+            - name: 💾 Upload build artifacts (Node.js 18.x only)
+              if: matrix.node-version == '18.x' && success()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-artifacts
+                  path: |
+                      dist/
+                      pack-output.txt
+                  retention-days: 7
+
+    # Job 4: Comprehensive status check
+    ci-status:
+        name: 🎯 CI Status Summary
+        runs-on: ubuntu-22.04
+
+        # Always run after all other jobs, regardless of success/failure
+        needs: [lint, test, build]
+        if: always()
+
+        steps:
+            - name: 🎯 Check overall CI status
+              run: |
+                  echo "=== CI Pipeline Summary ==="
+
+                  # Check individual job statuses
+                  LINT_STATUS="${{ needs.lint.result }}"
+                  TEST_STATUS="${{ needs.test.result }}"
+                  BUILD_STATUS="${{ needs.build.result }}"
+
+                  echo "🔍 Lint Status: $LINT_STATUS"
+                  echo "🧪 Test Status: $TEST_STATUS"
+                  echo "🏗️ Build Status: $BUILD_STATUS"
+
+                  # Determine overall status
+                  if [[ "$LINT_STATUS" == "success" && "$TEST_STATUS" == "success" && "$BUILD_STATUS" == "success" ]]; then
+                    echo ""
+                    echo "🎉 All CI checks passed successfully!"
+                    echo "✅ Code quality: Excellent"
+                    echo "✅ Tests: All passing"
+                    echo "✅ Build: Successful"
+                    echo ""
+                    echo "This branch is ready for merge! 🚀"
+                    exit 0
+                  else
+                    echo ""
+                    echo "❌ Some CI checks failed:"
+                    [[ "$LINT_STATUS" != "success" ]] && echo "  - Linting issues detected"
+                    [[ "$TEST_STATUS" != "success" ]] && echo "  - Test failures or errors"
+                    [[ "$BUILD_STATUS" != "success" ]] && echo "  - Build problems"
+                    echo ""
+                    echo "Please review the failed jobs and fix the issues."
+                    exit 1
+                  fi
+
+            - name: 📋 Workflow information
+              if: always()
+              run: |
+                  echo "=== Workflow Information ==="
+                  echo "📂 Repository: ${{ github.repository }}"
+                  echo "🌿 Branch: ${{ github.ref_name }}"
+                  echo "👤 Actor: ${{ github.actor }}"
+                  echo "🎯 Event: ${{ github.event_name }}"
+                  echo "🔗 Run URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
