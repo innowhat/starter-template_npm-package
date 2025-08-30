@@ -1,83 +1,111 @@
-name: CI-Build
+name: CI Pipeline
+
 on:
     push:
-        branches:
-            - '**'
-        tags-ignore:
-            - 'v*'
+        branches: ['**']
+        tags-ignore: ['v*']
     pull_request:
-        types:
-            - closed
-        branches:
-            - main
+        types: [opened, synchronize, reopened]
+        branches: [main]
+
+# Add concurrency control to cancel outdated runs
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     lint:
         name: 🔍 Code Quality & Linting
         runs-on: ubuntu-22.04
 
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
+        if: >
+            (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+            (github.event_name == 'pull_request' && github.actor != 'github-actions[bot]')
+
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
+
         steps:
-            - name: Checkout code style
+            - name: 📦 Checkout repository
               uses: actions/checkout@v4
-            - name: Use Node.js ${{ matrix.node-version }} to check Lint
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
-                  always-auth: 'false'
-                  cache: 'npm'
                   node-version: ${{ matrix.node-version }}
-            - name: Install Dependencies
+                  cache: 'npm'
+                  always-auth: false
+
+            - name: 📥 Install dependencies
               run: npm ci
-            - name: Run ESLint
-              run: |
-                  npm run lint
+
+            - name: 🔍 Run ESLint
+              run: npm run lint
 
     tests:
         name: 🧪 Test Suite
         runs-on: ubuntu-22.04
         needs: lint
 
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
+        if: >
+            (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+            (github.event_name == 'pull_request' && github.actor != 'github-actions[bot]')
 
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
+            # Added: Don't cancel other matrix jobs if one fails
+            fail-fast: false
+
         steps:
-            - name: Checkout code
+            - name: 📦 Checkout repository
               uses: actions/checkout@v4
-            - name: Use Node.js ${{ matrix.node-version }} to run Tests Covering
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
-                  always-auth: 'false'
                   node-version: ${{ matrix.node-version }}
                   cache: 'npm'
-            - name: Install Dependencies
+                  always-auth: false
+
+            - name: 📥 Install dependencies
               run: npm ci
-            - name: Run Tests Command (Jest-CI)
-              run: npm test
+
+            - name: 🧪 Run test suite
+              run: npm run test:ci
 
     build:
         name: 🏗️ Build Verification
         runs-on: ubuntu-22.04
         needs: [lint, tests]
 
-        if: github.event_name == 'push' && github.actor.name != 'github-actions[bot]'
+        if: >
+            (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+            (github.event_name == 'pull_request' && github.actor != 'github-actions[bot]')
+
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
-                arch:
-                    - x64
+                architecture: [x64]
+
         steps:
-            - name: Checkout code
+            - name: 📦 Checkout repository
               uses: actions/checkout@v4
-            - name: Use Node.js ${{matrix.node-version}} to run build dist on ${{ matrix.arch }}
+
+            - name: 🟢 Setup Node.js ${{ matrix.node-version }} (${{ matrix.architecture }})
               uses: actions/setup-node@v4
               with:
+                  node-version: ${{ matrix.node-version }}
+                  architecture: ${{ matrix.architecture }}
                   cache: 'npm'
-                  node-version: ${{ matrix.node-version}}
-            - name: Install dependencies
+
+            - name: 📥 Install dependencies
               run: npm ci
-            - name: Run Build Dist
+
+            - name: 🏗️ Build project
               run: npm run build
+
+            # Added: Basic verification that build worked
+            - name: ✅ Verify build output
+              run: test -d dist || (echo "Build failed - no dist directory" && exit 1)
