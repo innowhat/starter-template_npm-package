@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- relocate documentation location
+
 ### Deprecated
 
 ### Removed
@@ -19,30 +21,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [1.0.0] - 2025-01-XX
+## [v1.0.7] - 2025-08-30
 
 ### Added
 
-- Initial release
-- Basic package functionality with `greet()` and `capitalize()` functions
-- ES modules (ESM) and CommonJS (CJS) dual format support
-- Comprehensive test suite with Vitest
-- TypeScript declaration files
-- Automated CI/CD pipeline with GitHub Actions
-- Build status badges
-- Complete documentation (README, CONTRIBUTING, etc.)
+- Lorem something somehow
 
-### Infrastructure
+## [v1.0.6] - 2025-08-29
 
-- GitHub Actions workflow for testing on Node.js 18.x, 20.x, 22.x
-- Automated npm publishing on version tags
-- Branch protection rules for main branch
-- ESLint code quality checks
-- Vitest test runner with coverage reporting
+### Fixed
 
----
+- Lorem something somehow
 
-<!-- Version Links -->
+## [v1.0.5] - 2025-08-28
 
-[Unreleased]: https://github.com/innowhat/starter-template_npm-package/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/innowhat/starter-template_npm-package/releases/tag/v1.0.0
+### Deprecated
+
+- Lorem something somehow
+
+## [v1.0.4] - 2025-08-27
+
+### Changed
+
+- Lorem something somehow
+
+## [v1.0.3] - 2025-08-26
+
+### Added
+
+- Lorem something somehow
+
+## [v1.0.2] - 2025-08-25
+
+### Added
+
+- Lorem something somehow
+
+## [v1.0.1] - 2025-08-24
+
+### Added
+
+- Lorem something somehow
+
+## [v1.0.0] - 2025-08-23
+
+### Security
+
+- Lorem something somehow
