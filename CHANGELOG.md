@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- relocate documentation location
-
 ### Deprecated
 
 ### Removed
@@ -21,11 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [v1.0.8] - 2025-08-30
+
 ## [v1.0.7] - 2025-08-30
 
-### Added
+### Changed
 
-- Lorem something somehow
+- relocate documentation location
 
 ## [v1.0.6] - 2025-08-29
 
