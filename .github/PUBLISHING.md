@@ -51,9 +51,9 @@ git checkout -b release/prepare-next-version
 
 ```bash
 # Choose one based on your changes:
-npm version patch    # Bug fixes, small updates
-npm version minor    # New features, backward compatible
-npm version major    # Breaking changes
+npm version patch --no-git-tag-version    # Bug fixes, small updates
+npm version minor --no-git-tag-version    # New features, backward compatible
+npm version major --no-git-tag-version    # Breaking changes
 
 # This updates package.json and package-lock.json automatically
 ```
@@ -68,7 +68,13 @@ git push origin release/prepare-next-version
 - Get approval from another maintainer
 - Merge when CI passes
 
-### 4. Automatic Publishing
+### 4. Create PR and Merge
+
+- Open PR: `release/prepare-next-version` → `main`
+- Get approval from another maintainer
+- Merge when CI passes
+
+### 5. Automatic Publishing
 
 After merge, GitHub Actions automatically:
 
@@ -109,14 +115,15 @@ The automation creates tags on GitHub. Your job is just to fetch them locally.
 
 ## 🚨 Troubleshooting
 
-**Tag already exists error?**
+**Local tags conflicting with automation?**
 
 ```bash
 ! [rejected] v1.0.1 -> v1.0.1 (would clobber existing tag)
 ```
 
-- **Cause**: You're trying to push a tag that automation already created
-- **Fix**: Just run `git fetch --tags` to get the existing tags locally
+- **Cause**: `npm version` created local tags that conflict with automation
+- **Fix**: Use `npm version patch --no-git-tag-version` instead
+- **Cleanup**: Delete local tags with `git tag -d v1.0.1` if needed
 
 **Publishing failed?**
 
