@@ -1,131 +1,145 @@
-# Publishing Guide (Updated: via Feature Branch + Pull Request)
+# Publishing Guide
 
-## 🚀 Overview
+Simple guide for maintainers to publish new versions.
 
-This project uses **automated publishing** with GitHub Actions.
-The process is triggered **after a pull request is merged** into the `main` branch containing a version tag.
+## 🎯 How It Works
 
-> 📝 You no longer create tags directly on `main` — instead, prepare the version bump in a feature branch, then merge via PR.
+When you merge a PR that changes the package version, GitHub Actions automatically:
 
----
+- Creates a git tag
+- Creates a GitHub release
+- Publishes to npm
 
-## 📋 Prerequisites
+## 🚀 Quick Release Process
 
-Before publishing, ensure you have:
-
-- [ ] Maintainer access to the repository
-- [ ] All intended changes have been merged into `main` branch
-- [ ] CI pipeline passing on the feature branch and on `main`
-
----
-
-## 🔄 Publishing Workflow
-
-### Step 1: Create a Feature Branch for the Release
+### 1. Create Release Branch
 
 ```bash
-# Make sure you're on main and up to date
 git checkout main
 git pull origin main
-
-# Create a release branch
-git checkout -b release/v1.0.1   # Adjust version as needed
+git checkout -b release/prepare-next-version
 ```
 
----
+### 2. Update Version & Changelog
 
-### Step 2: Choose Version Type
+**Update Changelog:**
 
-Decide on the release type:
+1. Change `## [Unreleased]` to version number with date
+    - Example: `## [1.2.4] - 2020-12-24`
 
-- **Patch** (`1.0.0` → `1.0.1`) — Bug fixes, documentation updates
-- **Minor** (`1.0.1` → `1.1.0`) — New features, backward-compatible
-- **Major** (`1.1.0` → `2.0.0`) — Breaking changes
+2. Remove empty subsections in the newly added changelog section
 
----
+3. Add new empty `## [Unreleased]` section on top:
 
-### Step 3: Bump Version Locally
+    ```markdown
+    ## [Unreleased]
 
-Use npm versioning:
+    ### Added
+
+    ### Changed
+
+    ### Fixed
+
+    ### Deprecated
+
+    ### Removed
+
+    ### Security
+    ```
+
+**Bump version:**
 
 ```bash
-# For patch release
-npm version patch --no-git-tag-version
+# Choose one based on your changes:
+npm version patch    # Bug fixes, small updates
+npm version minor    # New features, backward compatible
+npm version major    # Breaking changes
 
-# For minor release
-npm version minor --no-git-tag-version
-
-# For major release
-npm version major --no-git-tag-version
+# This updates package.json and package-lock.json automatically
 ```
 
-> ⚠️ `--no-git-tag-version` is critical — you **do not** create a tag yet; that will be done automatically after merge.
-
----
-
-### Step 4: Commit and Push the Release Branch
+### 3. Push and Create PR
 
 ```bash
-git add package.json package-lock.json
-git commit -m "chore(release): v1.0.1"
-git push origin release/v1.0.1
+git push origin release/prepare-next-version
 ```
 
----
+- Open PR: `release/prepare-next-version` → `main`
+- Get approval from another maintainer
+- Merge when CI passes
 
-### Step 5: Open a Pull Request
+### 4. Automatic Publishing
 
-- Open a PR from `release/v1.0.1` → `main`
-- Request review from another maintainer
-- Ensure CI checks pass
+After merge, GitHub Actions automatically:
 
----
+- ✅ Creates appropriate version tag
+- ✅ Creates GitHub release
+- ✅ Publishes to npm
 
-### Step 6: Merge the PR
+## ✅ Verification
 
-Once approved and CI passes, **merge** the PR into `main`.
+After the automated publishing completes:
 
-> 🪄 After merge, GitHub Actions will:
->
-> - Tag the new version
-> - Create a GitHub Release
-> - Publish the package to npm
+1. **Sync your local repository:**
 
----
+    ```bash
+    git checkout main
+    git pull origin main
+    git fetch --tags  # Important: Get the auto-created tag
+    ```
 
-### Step 7: Verify the Release
+2. **Verify publishing worked:**
+    - **GitHub**: Go to [Releases](../../releases) tab
+    - **NPM**: Visit [npmjs.com/package/your-package-name](https://npmjs.com/package/your-package-name)
+    - **Local tags**: Run `git tag -l` to see the new tag
 
-1. Check GitHub Actions → confirm “Release and Publish” workflow succeeded
+### ⚠️ Important: Don't Push Tags Manually
 
-2. Verify:
-    - ✅ GitHub release created
-    - ✅ NPM package updated
-
-3. Optionally test:
+After automated publishing, **do not** try to push tags manually - they already exist:
 
 ```bash
-npm install your-package-name@latest
+# ❌ DON'T DO THIS - will cause "clobber existing tag" error
+git push origin v1.0.1
+
+# ✅ DO THIS INSTEAD - fetch existing tags created by automation
+git fetch --tags
 ```
 
----
+The automation creates tags on GitHub. Your job is just to fetch them locally.
 
 ## 🚨 Troubleshooting
 
-Most of the issues are the same, but add:
+**Tag already exists error?**
 
-**❌ "Release PR merged but no tag created"**
+```bash
+! [rejected] v1.0.1 -> v1.0.1 (would clobber existing tag)
+```
 
-- **Cause**: Workflow is not configured to create tags after merge
-- **Fix**: Update release GitHub Action to run on `push` events to `main` with proper conditions
+- **Cause**: You're trying to push a tag that automation already created
+- **Fix**: Just run `git fetch --tags` to get the existing tags locally
+
+**Publishing failed?**
+
+- Check `NPM_TOKEN` is valid in repository secrets
+- Ensure package name doesn't conflict with existing packages
+
+**Want to test before publishing?**
+
+```bash
+# Test package creation locally
+npm pack --dry-run
+```
+
+## ⚡ Quick Reference
+
+| Step             | Command                                        |
+| ---------------- | ---------------------------------------------- |
+| Create branch    | `git checkout -b release/prepare-next-version` |
+| Update changelog | Edit `CHANGELOG.md` manually                   |
+| Bump version     | `npm version patch`                            |
+| Push & PR        | `git push origin release/prepare-next-version` |
+| Merge → Publish  | Automatic after PR merge                       |
 
 ---
 
-## 📊 Quick Reference (New Flow)
-
-| Step                | Command/Action                                                                          |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| Create branch       | `git checkout -b release/vX.Y.Z`                                                        |
-| Bump version        | `npm version patch --no-git-tag-version`                                                |
-| Commit & push       | `git add . && git commit -m "chore(release): vX.Y.Z" && git push origin release/vX.Y.Z` |
-| PR → review → merge | via GitHub UI                                                                           |
-| Publishing          | automated after merge                                                                   |
+**That's it!** The automation handles the rest. 🎉

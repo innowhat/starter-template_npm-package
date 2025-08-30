@@ -6,10 +6,12 @@ Thank you for your interest in contributing to this project! We welcome contribu
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
+
     ```bash
     git clone https://github.com/innowhat/starter-template_npm-package.git
-    cd project-name
+
     ```
+
 3. **Install dependencies**:
     ```bash
     npm install
@@ -23,15 +25,19 @@ Thank you for your interest in contributing to this project! We welcome contribu
 
 1. **Make your changes** in the appropriate files
 2. **Write or update tests** for your changes
-3. **Run tests** to ensure everything works:
+3. **Update CHANGELOG.md** - Add your changes to the `[Unreleased]` section:
+    - Use the appropriate category: Added, Changed, Deprecated, Removed, Fixed, Security
+    - Write clear, user-focused descriptions
+    - Link to relevant issues/PRs when helpful (e.g., `(#123)`)
+4. **Run tests** to ensure everything works:
     ```bash
     npm test
     ```
-4. **Build the project** to check for issues:
+5. **Build the project** to check for issues:
     ```bash
     npm run build
     ```
-5. **Commit your changes** with a clear message:
+6. **Commit your changes** with a clear message:
     ```bash
     git commit -m "Add: description of your changes"
     ```
@@ -79,6 +85,41 @@ When reporting bugs or requesting features:
 - Provide clear steps to reproduce (for bugs)
 - Include relevant system information
 - Be respectful and constructive
+
+## Changelog Guidelines
+
+When making changes, please update the `CHANGELOG.md` file:
+
+### Categories
+
+- **Added** - for new features
+- **Changed** - for changes in existing functionality
+- **Deprecated** - for soon-to-be removed features
+- **Removed** - for now removed features
+- **Fixed** - for any bug fixes
+- **Security** - for vulnerability fixes
+
+### Format Example
+
+```markdown
+## [Unreleased]
+
+### Added
+
+- New `slugify()` function for URL-safe strings (#42)
+- Support for custom greeting prefixes in `greet()` (#38)
+
+### Fixed
+
+- Fixed edge case in `capitalize()` with empty strings (#41)
+```
+
+### For Maintainers (Release Process)
+
+1. Move items from `[Unreleased]` to a new version section
+2. Add the release date
+3. Create a link to the version at the bottom
+4. Leave `[Unreleased]` empty for future changes
 
 ## Questions?
 
