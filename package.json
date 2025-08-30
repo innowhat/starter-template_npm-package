@@ -3,7 +3,7 @@
     "author": "innoo.dev",
     "license": "MIT",
     "name": "@innowhat/starter-template_npm-package",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "An npm package for demonstration purposes using TypeScript to build for the ECMAScript Module format (i.e. ESM or ES Module). It can be used in Node.js and browser applications.",
     "type": "module",
     "types": "dist/index.d.ts",
