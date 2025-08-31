@@ -24,12 +24,17 @@ git checkout -b release/prepare-next-version
 
 **Update Changelog:**
 
-1. Change `## [Unreleased]` to version number with date
-    - Example: `## [1.2.4] - 2020-12-24`
+1. **Find the `## [Unreleased]` section** in CHANGELOG.md
 
-2. Remove empty subsections in the newly added changelog section
+2. **Change it to the new version** with today's date:
 
-3. Add new empty `## [Unreleased]` section on top:
+    ```markdown
+    ## [1.2.4] - 2025-08-31
+    ```
+
+3. **Remove any empty subsections** under the new version (keep only sections with content)
+
+4. **Add a fresh `## [Unreleased]` section** at the top of the file:
 
     ```markdown
     ## [Unreleased]
@@ -47,13 +52,59 @@ git checkout -b release/prepare-next-version
     ### Security
     ```
 
+**Example transformation:**
+
+```markdown
+# Before:
+
+## [Unreleased]
+
+### Added
+
+- New feature X
+
+### Fixed
+
+- Bug Y fix
+
+### Changed
+
+### Removed
+
+# After:
+
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+### Security
+
+## [1.2.4] - 2025-08-31
+
+### Added
+
+- New feature X
+
+### Fixed
+
+- Bug Y fix
+```
+
 **Bump version:**
 
 ```bash
 # Choose one based on your changes:
-npm version patch --no-git-tag-version    # Bug fixes, small updates
-npm version minor --no-git-tag-version    # New features, backward compatible
-npm version major --no-git-tag-version    # Breaking changes
+npm version patch    # Bug fixes, small updates
+npm version minor    # New features, backward compatible
+npm version major    # Breaking changes
 
 # This updates package.json and package-lock.json automatically
 ```
@@ -73,6 +124,10 @@ git push origin release/prepare-next-version
 - Open PR: `release/prepare-next-version` → `main`
 - Get approval from another maintainer
 - Merge when CI passes
+
+### 5. Automatic Publishing
+
+After merge, GitHub Actions automatically:
 
 ### 5. Automatic Publishing
 
