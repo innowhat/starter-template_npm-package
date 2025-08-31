@@ -6,12 +6,10 @@ Thank you for your interest in contributing to this project! We welcome contribu
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
-
     ```bash
-    git clone https://github.com/innowhat/starter-template_npm-package.git
-
+    git clone https://github.com/your-username/project-name.git
+    cd project-name
     ```
-
 3. **Install dependencies**:
     ```bash
     npm install
@@ -29,6 +27,7 @@ Thank you for your interest in contributing to this project! We welcome contribu
     - Use the appropriate category: Added, Changed, Deprecated, Removed, Fixed, Security
     - Write clear, user-focused descriptions
     - Link to relevant issues/PRs when helpful (e.g., `(#123)`)
+    - **Note**: Only add to `[Unreleased]` - don't create version sections (maintainers handle releases)
 4. **Run tests** to ensure everything works:
     ```bash
     npm test
@@ -114,12 +113,13 @@ When making changes, please update the `CHANGELOG.md` file:
 - Fixed edge case in `capitalize()` with empty strings (#41)
 ```
 
-### For Maintainers (Release Process)
+## Publishing (For Maintainers)
 
-1. Move items from `[Unreleased]` to a new version section
-2. Add the release date
-3. Create a link to the version at the bottom
-4. Leave `[Unreleased]` empty for future changes
+Maintainers should refer to [PUBLISHING.md](./PUBLISHING.md) for the complete release process, including:
+
+- How to transform `[Unreleased]` items into version sections
+- Version bumping and tagging workflow
+- Automated publishing process
 
 ## Questions?
 
