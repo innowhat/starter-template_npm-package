@@ -22,6 +22,17 @@ git checkout -b release/prepare-next-version
 
 ### 2. Update Version & Changelog
 
+**Bump version:**
+
+```bash
+# Choose one based on your changes:
+npm version patch --no-git-tag-version    # Bug fixes, small updates
+npm version minor --no-git-tag-version    # New features, backward compatible
+npm version major --no-git-tag-version    # Breaking changes
+
+# This updates package.json and package-lock.json automatically
+```
+
 **Update Changelog:**
 
 1. **Find the `## [Unreleased]` section** in CHANGELOG.md
@@ -54,9 +65,9 @@ git checkout -b release/prepare-next-version
 
 **Example transformation:**
 
-```markdown
-# Before:
+#### Before:
 
+```markdown
 ## [Unreleased]
 
 ### Added
@@ -70,9 +81,11 @@ git checkout -b release/prepare-next-version
 ### Changed
 
 ### Removed
+```
 
-# After:
+#### After:
 
+```markdown
 ## [Unreleased]
 
 ### Added
@@ -96,17 +109,6 @@ git checkout -b release/prepare-next-version
 ### Fixed
 
 - Bug Y fix
-```
-
-**Bump version:**
-
-```bash
-# Choose one based on your changes:
-npm version patch    # Bug fixes, small updates
-npm version minor    # New features, backward compatible
-npm version major    # Breaking changes
-
-# This updates package.json and package-lock.json automatically
 ```
 
 ### 3. Push and Create PR
