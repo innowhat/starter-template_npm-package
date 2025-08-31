@@ -114,7 +114,9 @@ npm version major --no-git-tag-version    # Breaking changes
 ### 3. Push and Create PR
 
 ```bash
+git add .
 git push origin release/prepare-next-version
+git commit -m "origin release/prepare-next-version_1.2.2"
 ```
 
 - Open PR: `release/prepare-next-version` → `main`
