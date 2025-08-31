@@ -1,9 +1,10 @@
 name: Release
 
 on:
-    push:
-        branches:
-            - main
+    workflow_run:
+        workflows: ['CI Pipeline'] # Must match the `name:` of your CI workflow
+        types:
+            - completed
 
 permissions:
     contents: write
@@ -12,12 +13,17 @@ jobs:
     detect-release:
         name: 🕵️ Detect version bump
         runs-on: ubuntu-latest
+        # Only proceed if CI was successful AND branch is main
+        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
         outputs:
             release: ${{ steps.check.outputs.release }}
             version: ${{ steps.check.outputs.version }}
         steps:
             - name: 📦 Checkout repository
               uses: actions/checkout@v4
+              with:
+                  # Get the same commit SHA that CI validated
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
             - name: 🔍 Check if package.json version changed (with safety check)
               id: check
@@ -50,6 +56,8 @@ jobs:
         steps:
             - name: 📦 Checkout repository
               uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
             - name: 🏷️ Create tag
               run: |
@@ -71,14 +79,17 @@ jobs:
         name: 📦 Publish to NPM Registry
         runs-on: ubuntu-22.04
         needs: release
+        if: needs.release.result == 'success'
         steps:
             - name: 📦 Checkout repository
               uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
-                  cache: 'npm'
+                  cache: npm
                   node-version: 18.x
                   architecture: x64
                   registry-url: https://registry.npmjs.org/
